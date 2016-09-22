@@ -7,8 +7,10 @@ import (
 func TestQcloudEngine_DoRequest(t *testing.T) {
 	engine := NewQcloudEngine().WithRegion("gz")
 	componentUrl := "cbs.api.qcloud.com"
-	err := engine.DoRequest(componentUrl, "DescribeCbsStorages", map[string]interface{}{
-	})
+	var rspObj interface{}
+	err := engine.DoRequest(
+		componentUrl, "DescribeCbsStorages", map[string]interface{}{}, rspObj,
+	)
 	if err != nil {
 		t.Error(err)
 		return

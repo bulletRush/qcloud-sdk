@@ -6,7 +6,7 @@ import (
 
 func TestQcloudEngine_DescribeCbsStorages(t *testing.T) {
 	engine := NewQcloudEngine()
-	param := DescribeCbsStiragesParam{
+	param := DescribeCbsStoragesRequest{
 		DiskType: &DISKTYPE_DATA,
 	}
 	err := engine.DescribeCbsStorages(param)

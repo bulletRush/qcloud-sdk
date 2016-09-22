@@ -13,7 +13,7 @@ var (
 	DISKTYPE_DATA = "data"
 )
 
-type DescribeCbsStiragesParam struct {
+type DescribeCbsStoragesRequest struct {
 	DiskType *string
 	PayMode *string
 	Portable *int
@@ -26,6 +26,31 @@ type DescribeCbsStiragesParam struct {
 	Limit *int
 }
 
+type CbsStorage struct {
+	Attached int `json:"attached"`
+	CreateTime string `json:"createTime"`
+	DeadlineTime string `json:"deadlineTime"`
+	DiskType string `json:"diskType"`
+	PayMode string `json:"payMode"`
+	Portable int `json:"portable"`
+	ProjectId int `json:"projectId"`
+	SnapshotAbility int `json:"snapshotAbility"`
+	StorageId string `json:"storageId"`
+	StorageName string `json:"storageName"`
+	StorageSize int `json:"storageSize"`
+	StorageStatus string `json:"storageStatus"`
+	StorageType string `json:"storageType"`
+	UInstanceId string `json:"uInstanceId"`
+	ZoneId int `json:"zoneId"`
+}
+
+type DescribeCbsStoragesResponse struct {
+	Code int
+	message string
+	TotalCount int
+	StorageSet []CbsStorage
+}
+
 func checkEnum(v interface{}, a ...interface{}) bool {
 	for _, k := range a {
 		if reflect.DeepEqual(k, v) {
@@ -35,7 +60,7 @@ func checkEnum(v interface{}, a ...interface{}) bool {
 	return false
 }
 
-func (this *QcloudEngine) DescribeCbsStorages(param DescribeCbsStiragesParam) error {
+func (this *QcloudEngine) DescribeCbsStorages(param DescribeCbsStoragesRequest) error {
 	args := map[string]interface{}{}
 	if param.DiskType != nil {
 		if !checkEnum(*param.DiskType, DISKTYPE_DATA, DISKTYPE_ROOT) {
@@ -50,9 +75,11 @@ func (this *QcloudEngine) DescribeCbsStorages(param DescribeCbsStiragesParam) er
 			args[key] = storageId
 		}
 	}
-	err := this.DoRequest(CBS_API_URI, "DescribeCbsStorages", args)
+	rspObj := DescribeCbsStoragesResponse{}
+	err := this.DoRequest(CBS_API_URI, "DescribeCbsStorages", args, &rspObj)
 	if err != nil {
 		return err
 	}
+	this.logger.Debug("json decode succ", "rspObj", rspObj)
 	return nil
 }

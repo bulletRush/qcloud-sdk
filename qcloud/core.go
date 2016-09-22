@@ -13,6 +13,7 @@ import (
 	"crypto/sha1"
 	"net/url"
 	"io/ioutil"
+	"encoding/json"
 )
 
 const (
@@ -83,7 +84,7 @@ func (this *QcloudEngine) GenerateSignature(
 
 func (this *QcloudEngine) DoRequest(
 	componetUrl string, action string,
-	content map[string]interface{},
+	content map[string]interface{}, rspObj interface{},
 ) error {
 	content["Action"] = action
 	content["Nonce"] = rand.New(rand.NewSource(time.Now().UnixNano())).Int63()
@@ -108,5 +109,12 @@ func (this *QcloudEngine) DoRequest(
 		return err
 	}
 	this.logger.Debug("http get succ", "response", string(data), "url", url)
+	if rspObj != nil {
+		err = json.Unmarshal(data, rspObj)
+		if err != nil {
+			this.logger.Error("unmarshal json failed!", "error", err, "response", string(data))
+			return err
+		}
+	}
 	return nil
 }
