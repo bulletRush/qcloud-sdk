@@ -22,6 +22,7 @@ type InterfaceDefinition struct {
 	Describe        string `json:"describe,omitempty"`
 	InputPreProcess string `json:"inputPreProcess,omitempty"`
 	InputParamList []ParamDefinition `json:"inputParamList"`
+	OutputParamList []ParamDefinition `json:"outputParamList"`
 }
 
 type ServiceDefinition struct {

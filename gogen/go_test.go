@@ -44,7 +44,13 @@ func TestNewGoGenerator(t *testing.T) {
 }
 
 func newGoGenerator() *GoGenerator {
-	return NewGoGenerator(os.Stdout, "demo", "DemoService")
+	return NewGoGenerator(os.Stdout, "svc", "CbsService")
+}
+
+func TestGoGenerator_GenRequestDefinition(t *testing.T) {
+	gg := newGoGenerator()
+	gg.GenRequestDefinition(interfaceDef)
+	gg.Output()
 }
 
 func xTestGoGenerator_GenInputParamCheck(t *testing.T) {
@@ -59,5 +65,12 @@ func xTestGoGenerator_GenCheckCall(t *testing.T) {
 
 func TestGoGenerator_GenFunc(t *testing.T) {
 	gg := newGoGenerator()
-	fmt.Println(gg.GenFunc(interfaceDef))
+	gg.GenFunc(interfaceDef)
+	gg.Output()
+}
+
+func TestGoGenerator_GenResponseDefinition(t *testing.T) {
+	gg := newGoGenerator()
+	gg.GenResponseDefinition(interfaceDef)
+	gg.Output()
 }
