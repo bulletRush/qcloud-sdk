@@ -1,4 +1,4 @@
-package generator
+package common
 
 import (
 	"encoding/json"
@@ -26,8 +26,9 @@ type InterfaceDefinition struct {
 }
 
 type ServiceDefinition struct {
+	Package string `json:"package"`
 	Name string `json:"name"`
-	HostList      map[string]string `json:"hostList"`
+	Host string `json:"host"`
 	InterfaceList []InterfaceDefinition `json:"interfaceList"`
 }
 

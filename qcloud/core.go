@@ -21,9 +21,15 @@ const (
 	QCLOUD_SECRETKEY = "QCLOUD_SECRETKEY"
 )
 
+type QcloudEngine interface {
+	WithRegion(region string) QcloudEngine
+	WithSecret(secretId, secretKey string) QcloudEngine
+	WithLogger(logger Logger) QcloudEngine
+	DoRequest(componetUrl, action string, content map[string]interface{}, rspObj interface{}) error
+	GetLogger() Logger
+}
 
-
-type QcloudEngine struct {
+type qcloudEngine struct {
 	region string
 	secretId string
 	secretKey string
@@ -31,8 +37,8 @@ type QcloudEngine struct {
 	logger Logger
 }
 
-func NewQcloudEngine() *QcloudEngine {
-	return &QcloudEngine{
+func NewQcloudEngine() QcloudEngine {
+	return &qcloudEngine{
 		secretKey: os.Getenv(QCLOUD_SECRETKEY),
 		secretId: os.Getenv(QCLOUD_SECRETID),
 		urlPostfix: "/v2/index.php",
@@ -41,23 +47,27 @@ func NewQcloudEngine() *QcloudEngine {
 	}
 }
 
-func (this *QcloudEngine) WithSecret(secretId, secretKey string) *QcloudEngine {
+func (this *qcloudEngine) WithSecret(secretId, secretKey string) QcloudEngine {
 	this.secretId = secretId
 	this.secretKey = secretKey
 	return this
 }
 
-func (this *QcloudEngine) WithRegion(region string) *QcloudEngine {
+func (this *qcloudEngine) WithRegion(region string) QcloudEngine {
 	this.region = region
 	return this
 }
 
-func (this *QcloudEngine) WithLogger(logger Logger) *QcloudEngine {
+func (this *qcloudEngine) WithLogger(logger Logger) QcloudEngine {
 	this.logger = logger
 	return this
 }
 
-func (this *QcloudEngine) GenerateGetParams(content map[string]interface{}) string {
+func (this *qcloudEngine) GetLogger() Logger {
+	return this.logger
+}
+
+func (this *qcloudEngine) generateGetParams(content map[string]interface{}) string {
 	var keys []string
 	for k := range content {
 		keys = append(keys, k)
@@ -72,17 +82,17 @@ func (this *QcloudEngine) GenerateGetParams(content map[string]interface{}) stri
 	return strings.Join(secs, "&")
 }
 
-func (this *QcloudEngine) GenerateSignature(
+func (this *qcloudEngine) generateSignature(
 	componentUrl string, content map[string]interface{},
 ) string {
-	raw_args := fmt.Sprintf("GET%s%s?%s", componentUrl, this.urlPostfix, this.GenerateGetParams(content))
+	raw_args := fmt.Sprintf("GET%s%s?%s", componentUrl, this.urlPostfix, this.generateGetParams(content))
 	mac := hmac.New(sha1.New, []byte(this.secretKey))
 	mac.Write([]byte(raw_args))
 	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return signature
 }
 
-func (this *QcloudEngine) DoRequest(
+func (this *qcloudEngine) DoRequest(
 	componetUrl string, action string,
 	content map[string]interface{}, rspObj interface{},
 ) error {
@@ -91,11 +101,11 @@ func (this *QcloudEngine) DoRequest(
 	content["Region"] = this.region
 	content["SecretId"] = this.secretId
 	content["Timestamp"] = time.Now().UTC().Unix()
-	content["Signature"] = this.GenerateSignature(
+	content["Signature"] = this.generateSignature(
 		componetUrl, content,
 	)
 	url := fmt.Sprintf("https://%s%s?%s",
-		componetUrl, this.urlPostfix, this.GenerateGetParams(content),
+		componetUrl, this.urlPostfix, this.generateGetParams(content),
 	)
 	rsp, err := http.Get(url)
 	if err != nil {

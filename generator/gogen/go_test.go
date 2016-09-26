@@ -1,10 +1,11 @@
-package gogenerator
+package gogen
 
 import (
 	"testing"
 	"os"
 	def "github.com/bulletRush/qcloud-sdk/generator"
 	"fmt"
+	engine "github.com/bulletRush/qcloud-sdk/qcloud"
 )
 
 var (
@@ -65,7 +66,7 @@ func xTestGoGenerator_GenCheckCall(t *testing.T) {
 
 func TestGoGenerator_GenFunc(t *testing.T) {
 	gg := newGoGenerator()
-	gg.GenFunc(interfaceDef)
+	gg.GenFunc( interfaceDef)
 	gg.Output()
 }
 
@@ -73,4 +74,14 @@ func TestGoGenerator_GenResponseDefinition(t *testing.T) {
 	gg := newGoGenerator()
 	gg.GenResponseDefinition(interfaceDef)
 	gg.Output()
+}
+
+func newQloudEngine() engine.QcloudEngine {
+	return engine.NewQcloudEngine()
+}
+
+func TestNewCbsService(t *testing.T) {
+	engine := newQloudEngine()
+	svc := NewCbsService(engine)
+	svc.DescribeCbsStorages(DescribeCbsS)
 }

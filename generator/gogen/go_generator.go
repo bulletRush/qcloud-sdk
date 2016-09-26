@@ -1,12 +1,11 @@
-package gogenerator
-
-import "fmt"
+package gogen
 
 import (
 	"io"
-	def "github.com/bulletRush/qcloud-sdk/generator"
+	def "github.com/bulletRush/qcloud-sdk/generator/common"
 	"bytes"
 	"strings"
+	"fmt"
 )
 
 const (
@@ -171,7 +170,7 @@ func (gen *GoGenerator) GenResponseDefinition(infDef def.InterfaceDefinition) er
 	return nil
 }
 
-func (gen *GoGenerator) GenFunc(infDef def.InterfaceDefinition) error {
+func (gen *GoGenerator) GenFunc(svcDef def.ServiceDefinition, infDef def.InterfaceDefinition) error {
 	// generate a struct if input arguments is great than MAX_ARGS_COUNT
 	if len(infDef.InputParamList) > MAX_ARGS_COUNT {
 		gen.GenRequestDefinition(infDef)
@@ -179,7 +178,7 @@ func (gen *GoGenerator) GenFunc(infDef def.InterfaceDefinition) error {
 	gen.GenResponseDefinition(infDef)
 	b := &gen.funcBuffer
 	gen.GenFuncDoc(infDef)
-	gen.fprintf(b, "func (svc *%s) %s(%s) (*%s, error) {\n", gen.clsName, infDef.Name, gen.GenFuncInputParams(infDef), gen.genResponseType(infDef))
+	gen.fprintf(b, "func (svc *%sService) %s(%s) (*%s, error) {\n", svcDef.Name, infDef.Name, gen.GenFuncInputParams(infDef), gen.genResponseType(infDef))
 	gen.indent()
 	gen.fprintf(b, "paramMap := map[string]interface{}{}\n")
 	for _, paramDef := range infDef.InputParamList {
@@ -194,7 +193,7 @@ func (gen *GoGenerator) GenFunc(infDef def.InterfaceDefinition) error {
 		}
 	}
 	gen.fprintf(b, "rspObj := &%s{}\n", gen.genResponseType(infDef))
-	gen.fprintf(b, "err := svc.DoRequest(paramMap, rspObj)\n")
+	gen.fprintf(b, "err := svc.DoRequest(svc.host,  \"%s\", paramMap, rspObj)\n", infDef.Name)
 	gen.fprintf(b, "if err != nil {\n")
 	gen.indent()
 	gen.fprintf(b, "svc.logger.Error(\"%s failed!\", \"error\", err)\n", infDef.Name)
@@ -204,5 +203,92 @@ func (gen *GoGenerator) GenFunc(infDef def.InterfaceDefinition) error {
 	gen.fprintf(b, "return rspObj, nil\n")
 	gen.unIndent()
 	gen.fprintf(b, "}\n")
+	return nil
+}
+
+func (gen *GoGenerator) GenImport(svcDef def.ServiceDefinition) error {
+	// TODO
+	return nil
+}
+
+func (gen *GoGenerator) GenServiceInterface(svcDef def.ServiceDefinition) []byte {
+	b := &bytes.Buffer{}
+	if len(gen.errList) > 0 {
+		return b.Bytes()
+	}
+
+	gen.fprintf(b, "type %sService interface {\n", strings.Title(svcDef.Name))
+	gen.indent()
+	for _, infDef := range svcDef.InterfaceList {
+		gen.fprintf(b, "%s(%s) (*%s, error)\n", infDef.Name, gen.GenFuncInputParams(infDef), gen.genResponseType(infDef))
+	}
+	gen.unIndent()
+	gen.fprintf(b, "}\n")
+	return b.Bytes()
+}
+
+func (gen *GoGenerator) GenServiceStruct(svcDef def.ServiceDefinition) []byte {
+	b := &bytes.Buffer{}
+	if len(gen.errList) > 0 {
+		return b.Bytes()
+	}
+	gen.fprintf(b, "type %sService struct {\n", svcDef.Name)
+	gen.indent()
+	gen.fprintf(b, "QcloudEngine\n")
+	gen.fprintf(b, "host string\n")
+	gen.fprintf(b, "logger Logger\n")
+	gen.unIndent()
+	gen.fprintf(b, "}\n")
+	return b.Bytes()
+}
+
+func (gen *GoGenerator) GenNewService(svcDef def.ServiceDefinition) []byte {
+	b := &bytes.Buffer{}
+	if len(gen.errList) > 0 {
+		return b.Bytes()
+	}
+	gen.fprintf(b, "func New%sService(engine QcloudEngine) %sService {\n", strings.Title(svcDef.Name), strings.Title(svcDef.Name))
+	gen.indent()
+	gen.fprintf(b, "return &%sService{\n", svcDef.Name)
+	gen.indent()
+	gen.fprintf(b, "QcloudEngine: engine,\n")
+	gen.fprintf(b, "host: \"%s\",\n", svcDef.Host)
+	gen.fprintf(b, "logger: engine.GetLogger(),\n")
+	gen.unIndent()
+	gen.fprintf(b, "}\n")
+	gen.unIndent()
+	gen.fprintf(b, "}\n")
+	return b.Bytes()
+}
+
+func (gen *GoGenerator) GenServiceCommon(svcDef def.ServiceDefinition) []byte {
+	b := &bytes.Buffer{}
+	if len(gen.errList) > 0 {
+		return b.Bytes()
+	}
+	interfaceDef := gen.GenServiceInterface(svcDef)
+	b.Write(interfaceDef)
+	gen.fprintf(b, "\n")
+	clsBuf := gen.GenServiceStruct(svcDef)
+	b.Write(clsBuf)
+	gen.fprintf(b, "\n")
+	newBuf := gen.GenNewService(svcDef)
+	b.Write(newBuf)
+	gen.fprintf(b, "\n")
+	return b.Bytes()
+}
+
+func (gen *GoGenerator) GenService(svcDef def.ServiceDefinition) error {
+	b := &bytes.Buffer{}
+	gen.fprintf(b, "package %s\n\n", svcDef.Package)
+	svcCommonBuf := gen.GenServiceCommon(svcDef)
+	b.Write(svcCommonBuf)
+	gen.fprintf(b, "\n")
+	for _, infDef := range svcDef.InterfaceList {
+		gen.GenFunc(svcDef, infDef)
+		gen.fprintf(&gen.funcBuffer, "\n")
+	}
+	gen.funcBuffer.WriteTo(b)
+	gen.writer.Write(b.Bytes())
 	return nil
 }

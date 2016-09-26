@@ -1,10 +1,6 @@
 package qcloud
 
-import (
-	"reflect"
-	"fmt"
-)
-
+/*
 const (
 	CBS_API_URI = "cbs.api.qcloud.com"
 )
@@ -83,3 +79,4 @@ func (this *QcloudEngine) DescribeCbsStorages(param DescribeCbsStoragesRequest) 
 	this.logger.Debug("json decode succ", "rspObj", rspObj)
 	return nil
 }
+*/

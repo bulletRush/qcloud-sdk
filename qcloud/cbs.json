@@ -1,7 +1,7 @@
 {
-  "hostList": {
-    "production": "cbs.api.qcloud.com"
-  },
+  "package": "qcloud",
+  "name": "cbs",
+  "host": "cbs.api.qcloud.com",
   "interfaceList": [
     {
       "name": "DescribeCbsStorages",
@@ -26,8 +26,8 @@
       ],
       "inputPostProcess": "core.InputPostProcess",
       "outputPreProcess": "core.OutputPostProcess",
-      "outputParamList": {
-      },
+      "outputParamList": [
+      ],
       "outputPostProcess": "core.OutputPostProcess"
     }
   ]
