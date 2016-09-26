@@ -1,0 +1,32 @@
+{
+  "package": "qcloud",
+  "name": "cvm",
+  "host": "cvm.api.qcloud.com",
+  "interfaceList": [
+    {
+      "name": "DescribeInstances",
+      "brief": "查看实例列表",
+      "describe": "本接口 (DescribeInstances) 用于获取一个或多个实例的详细信息。",
+      "inputPreProcess": "core.InputPreProcess",
+      "inputParamList": [
+        {
+          "name": "status",
+          "type": "int",
+          "optional": true,
+          "describe": "过滤条件：实例的状态"
+        },
+        {
+          "name": "zoneId",
+          "type": "int",
+          "optional": true,
+          "describe": "过滤条件：可用区ID"
+        }
+      ],
+      "inputPostProcess": "core.InputPostProcess",
+      "outputPreProcess": "core.OutputPostProcess",
+      "outputParamList": [
+      ],
+      "outputPostProcess": "core.OutputPostProcess"
+    }
+  ]
+}
